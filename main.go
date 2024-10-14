@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	s := state{cfg: &c}
+	s := &state{cfg: &c}
 
 	commands := commands{make(map[string]func(*state, command) error)}
 	commands.register("login", handlerLogin)
@@ -30,7 +30,7 @@ func main() {
 	commandName := args[1]
 	commandArgs := args[2:]
 
-	err = commands.run(&s, command{Name: commandName, Args: commandArgs})
+	err = commands.run(s, command{Name: commandName, Args: commandArgs})
 	if err != nil {
 		log.Fatal(err)
 	}
