@@ -1,14 +1,18 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/CamusSisyphus/blog_aggregator/internal/config"
+	"github.com/CamusSisyphus/blog_aggregator/internal/database"
+	_ "github.com/lib/pq"
 )
 
 type state struct {
+	db  *database.Queries
 	cfg *(config.Config)
 }
 
@@ -19,10 +23,29 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	s := &state{cfg: &c}
+
+	db, err := sql.Open("postgres", c.DBURL)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	dbQueries := database.New(db)
+
+	s := &state{db: dbQueries, cfg: &c}
 
 	commands := commands{make(map[string]func(*state, command) error)}
 	commands.register("login", handlerLogin)
+	commands.register("register", handlerRegister)
+	commands.register("reset", handlerReset)
+	commands.register("users", handlerUsers)
+	commands.register("agg", handlerAgg)
+	commands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
+	commands.register("feeds", handlerFeeds)
+	commands.register("follow", middlewareLoggedIn(handlerFollow))
+	commands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+	commands.register("following", middlewareLoggedIn(handlerFollowing))
+	commands.register("browse", middlewareLoggedIn(handlerBrowse))
+
 	args := os.Args
 	if len(args) < 2 {
 		log.Fatal("Not Enough Arguments Providedbootdev run dca1352a-7600-4d1d-bfdf-f9d741282e55")
